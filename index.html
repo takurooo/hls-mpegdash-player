@@ -1,0 +1,163 @@
+<html lang="ja">
+
+<head>
+    <title>VideoPlayer</title>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!-- video.js -->
+    <link rel="stylesheet" href="https://vjs.zencdn.net/7.4.1/video-js.css">
+    <!-- bootstrap -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <style type="text/css">
+        body {
+            background-color : #eee;
+            color : #aaa
+        }
+        html{
+            font-size: 100%;
+        }
+        h1 {
+            text-align : center;
+            margin-top : 18px;
+            font-size : 24px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <header>
+            <h1>HLS/MPEG-DASH PLAYER</h1>
+        </header>
+
+        <hr class="my-3">
+
+        <section>
+            <div class="embed-responsive-item">
+                <video-js id=videoPlayer class="vjs-fluid  vjs-default-skin vjs-big-play-centered mx-auto" width=640 height=360></video-js>
+            </div>
+
+            <hr class="my-3">
+
+            <form>
+                <div class="form-group">
+                    <label for="videoURL">Video URL</label>
+                    <input type="url" class="form-control" id="videoURL" value="" placeholder="https://...">
+                </div>
+                <button type="button" class="btn btn-primary" onclick="loadVideo()">Load</button>
+            </form>
+        </section>
+
+        <hr class="my-3">
+    </div>
+
+    <!-- video.js -->
+    <script src="https://vjs.zencdn.net/7.4.1/video.js"></script>
+
+    <!-- bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+    <script>
+
+        function loadVideo() {
+            let videoURL = document.getElementById("videoURL").value;
+            let mimeType = null;
+            let manifestExt = videoURL.slice(videoURL.lastIndexOf("."), videoURL.length);
+
+            switch (manifestExt){
+                case ".mpd":
+                    // MPEG-DASH
+                    mimeType = "application/dash+xml";
+                    break;
+                case ".m3u8":
+                    // HTTP Live Streaming
+                    mimeType = "application/x-mpegURL";
+                    break;
+                default:
+                    console.error("Invalid URL : ", videoURL);
+                    break;
+            }
+
+            console.log(player.canPlayType(mimeType));
+
+            if (mimeType) {            
+                if (!player.paused()) {
+                    player.pause();
+                }
+                player.src({
+                    type : mimeType,
+                    src  : videoURL
+                });
+                player.load();
+                player.play(); 
+            }
+        }
+
+        // ----------------------------------------
+        // Create player
+        // ----------------------------------------
+        var player = videojs('videoPlayer', {
+            autoplay      : false,
+            loop          : false,
+            controls      : true,
+            preload       : 'auto',
+            playbackRates : [0.5, 1, 1.5, 2]
+        });
+
+        // ----------------------------------------
+        // Setting default content
+        // ----------------------------------------
+        player.src({
+            type: "application/x-mpegURL",
+            src: "https://bitdash-a.akamaihd.net/content/MI201109210084_1/m3u8s/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8"
+            // type: "application/dash+xml",
+            // src: "https://livesim.dashif.org/livesim/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd"
+        });
+
+        // ----------------------------------------
+        // Setting callbach
+        // ----------------------------------------
+        player.on(['loadstart', 'loadedmetadata', 'loadeddata', 'play', 'playing', 'pause', 'suspend', 'seeking', 'seeked', 'waiting', 'canplay', 'canplaythrough', 'ratechange', 'ended', 'emptied', 'error', 'abort'], (e) => {
+            console.log(`Player Event : ${e.type}`);
+        });
+
+        player.ready(() => {
+            console.log("ready")
+            // player.muted(true)
+            // player.play()
+        });
+
+        // ----------------------------------------
+        // Show player info
+        // ----------------------------------------
+        // player.setInterval(() => {
+        //     console.log('- - - - - - - - - - - - - - - - - - - - - ');
+        //     console.log(`Source          : ${player.currentSrc()}`);
+        //     console.log(`Type            : ${player.currentType()}`);
+        //     console.log(`Resolution(WH)  : ${player.videoWidth()}px x ${player.videoHeight()}px`);
+        //     console.log(`CurrentTime     : ${Math.round(player.currentTime())}/${player.duration()}sec`)
+        //     console.log(`RemainingTime   : ${Math.round(player.remainingTime())}sec`)   
+        //     console.log(`BufferedPercent : ${player.bufferedPercent()}%`)
+        //     console.log(`BufferedEnd     : ${Math.round(player.bufferedEnd())}sec`)
+        //     console.log(`Loop            : ${player.loop()}`)
+        //     console.log(`ReadyState      : ${player.readyState()}`);
+        //     console.log(`NetworkState    : ${player.networkState()}`);
+        //     console.log('- - - - - - - - - - - - - - - - - - - - - ');
+        // }, 1000);
+    </script>
+</body>
+
+</html>
